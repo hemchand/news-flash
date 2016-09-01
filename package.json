@@ -1,0 +1,41 @@
+{
+  "name": "newsflash",
+  "private": true,
+  "version": "0.0.1",
+  "author": "Hemchand Thalanchert<hemchand.t@gmail.com>",
+  "scripts": {
+    "start": "./build.sh && node dist/app.js",
+    "monitor": "./build.sh && ./monitor.sh",
+    "test": "./build.sh && mocha --require source-map-support/register dist/test/test.js",
+    "test-debug": "./build.sh && mocha --debug-brk --require source-map-support/register dist/test/test.js"
+  },
+  "dependencies": {
+    "babel-polyfill": "*",
+    "isotropy-backend-mongodb": "1.1.3",
+    "koa": "2.0.0-alpha.3",
+    "koa-bodyparser": "3.0.0",
+    "koa-route": "3.1.0",
+    "node-summary": "^1.1.0",
+    "paddock": "*",
+    "promisify-node": "^0.4.0",
+    "request-promise": "3.0.0",
+    "striptags": "^2.1.1",
+    "wild-yak": "*",
+    "xml-escape": "^1.1.0",
+    "xml-to-json-promise": "0.0.3"
+  },
+  "devDependencies": {
+    "source-map-support": "*",
+    "source-map-loader": "*",
+    "babel-preset-es2015-without-regenerator": "*",
+    "babel-preset-stage-2": "*",
+    "babel-plugin-transform-class-properties": "*",
+    "babel-plugin-transform-async-to-generator": "*",
+    "babel-plugin-transform-flow-strip-types": "*",
+    "babel-loader": "*",
+    "supertest": "*",
+    "supertest-as-promised": "*",
+    "mocha": "*",
+    "should": "*"
+  }
+}
