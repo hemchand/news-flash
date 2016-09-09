@@ -61,7 +61,7 @@ export async function getNews() {
       // }
       // let textContent = striptags(matches[matches.length-1]);
       let summary = await summaryTool.summarize(entry.title, textContent);
-      let pubTime = Date.parse(entry.publishedDate);
+      let pubTime = new Date(entry.publishedDate);
       // console.log(`${pubTime}|${entry.link}`, "hash:", getHashCode(`${pubTime}|${entry.link}`));
       let formattedEntry = {title:entry.title, link:entry.link, pubTime, subtitle:matches[1], summary, image:imageUrl, tags:[category], value:0};
       // console.log(formattedEntry);
