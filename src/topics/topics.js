@@ -2,26 +2,7 @@
 import { defTopic, defPattern, defHook, init, enterTopic, exitTopic } from "wild-yak";
 import * as common from "./common";
 import * as libNews from "../domain/news";
-
-function formatResults(results) {
-  if (results && results.length > 0) {
-    return {
-      "type": "elements",
-      "values": results.slice(0,10).map((x) => ({
-        "title":x.title,
-        "subtitle": x.subtitle,
-        "image_url":x.image,
-        "options": [
-          {"text": "Read story", "url":x.link },
-          {"text": "Get a summary", "payload":`Get a summary ${x._id}` },
-          'Ask News minute,'
-        ]
-      }))
-    };
-  } else {
-    return ["Service unavailable at this time. Please try in a few minutes."];
-  }
-}
+import * as libUser from "../domain/user";
 
 const globalTopic: any = defTopic(
   "global",
@@ -36,7 +17,7 @@ const globalTopic: any = defTopic(
        [/^top stories$/i, /^headlines?$/i, /^head lines?$/i, /^trending/i],
        async (state) => {
          const articles = await libNews.getTopStories();
-         return [formatResults(articles)];
+         return [libNews.formatResults(articles)];
        }),
        defPattern(
         globalTopic,
@@ -44,7 +25,7 @@ const globalTopic: any = defTopic(
         [/^Stories for you$/i],
         async (state) => {
           const articles = await libNews.getYourStories();
-          return [formatResults(articles)];
+          return [libNews.formatResults(articles)];
       }),
       defHook(
        globalTopic,
@@ -88,7 +69,7 @@ const globalTopic: any = defTopic(
         async (state, message) => {
           const articles = await libNews.searchNews(message.text);
           if (articles && articles.length > 0) {
-            return [`Here’s something about ${message.text}`, formatResults(articles)];
+            return [`Here’s something about ${message.text}`, libNews.formatResults(articles)];
           } else {
             return ['¯\_(ツ)_/¯  Try again? Use a few words to tell me what you want to know more about... For example, you could type “headlines,” “Rio Olympics,” or “politics.”'];
           }

@@ -78,6 +78,11 @@ export default function(port: number) {
       const result = await news.refresh(pageAccessTokens);
       ctx.body = result;
     }),
+    router.get("/api/news/push", async (ctx) => {
+      // const result = await rss.getNews();
+      const result = await news.sendUpdates(paddock);
+      ctx.body = result;
+    }),
     // router.get("/api/web/getnews/:page", async (ctx) => {
     //   const result = await rss.getNews(page);
     //   ctx.body = result;

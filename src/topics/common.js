@@ -1,5 +1,6 @@
 /* @flow */
 import { defTopic, defPattern, defHook, enterTopic, clearConversation } from "wild-yak";
+import * as libUser from "../domain/user";
 
 const defautMenu = [
   "Top stories",
@@ -35,13 +36,14 @@ export function getStartOverHook(topic: any, mainTopic: any) : any {
     //  if (state.context.topic.name !== 'main') {
     //    await enterTopic(state.context.topic, state, main.topic);
     //  }
-     return [
-     'Hi there, let’s get started.',
-     {
-       "type":"options",
-       "text": "Pick an option below to get going",//Select from one of the below options:",
-       "values": defautMenu
-     }
-   ]
+    await libUser.save(state.session.user.id, state.session.type, state.session.pageId);
+  //    return [
+  //    'Hi there, let’s get started.',
+  //    {
+  //      "type":"options",
+  //      "text": "Pick an option below to get going",//Select from one of the below options:",
+  //      "values": defautMenu
+  //    }
+  //  ]
  });
 }

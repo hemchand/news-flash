@@ -4,6 +4,26 @@ import * as libDBO from "./dbo";
 
 const collName = 'articles';
 
+export function formatResults(results) {
+  if (results && results.length > 0) {
+    return {
+      "type": "elements",
+      "values": results.slice(0,10).map((x) => ({
+        "title":x.title,
+        "subtitle": x.subtitle,
+        "image_url":x.image,
+        "options": [
+          {"text": "Read story", "url":x.link },
+          {"text": "Get a summary", "payload":`Get a summary ${x._id}` },
+          'Ask News minute,'
+        ]
+      }))
+    };
+  } else {
+    return ["Service unavailable at this time. Please try in a few minutes."];
+  }
+}
+
 export async function getTopStories(lastId) {
   const filter = lastId ? {_id : { "$lt" : lastId }} : {};
   return await (await libDBO.findManyCursor(collName, filter)).sort({value: -1}).limit(5).toArray();
@@ -52,4 +72,13 @@ export async function refresh(pageAccessTokens) {
   const result = {articles:articles.length, newArticles, postStats:Object.keys(fbPosts).length, statsUpdates};
   console.log(result);
   return result;
+}
+
+export async function sendUpdates(paddock) {
+  let users = await libDBO.findMany("users", {}, ['userId', 'pageId']);
+  let contexts = users.map(usr => { return {session:{user: { id: usr.userId }, pageId: usr.pageId}}; });
+  const articles = await getYourStories();
+  let messages = [{type:'string', text:'Here are the top stories of the day'}, formatResults(articles)];
+  await paddock.facebook.sendBatchMessages(contexts, messages, 'messaging');
+  return `Top stories sent to ${users.length} users.`;
 }

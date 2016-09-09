@@ -2,11 +2,12 @@
 import request from "request-promise";
 import striptags from "striptags";
 import promisify from "promisify-node";
+import {tidy} from "htmltidy";
 
 const summaryTool = promisify("node-summary");
 
 const rex = /\<div\>\s*\<div\>\s*\<div\>([\s\S]*?)\<\/div\>\s*\<\/div\>\s*\<\/div\>/igm;
-const imagex = /\<img src="([^"]*)"/g;
+const imagex = /\<div\>\s*<img src="([^"]*)"[^\<]*?\<\/div\>/igm;
 
 const rssFeeds = {
   "India and World":	'http://www.thenewsminute.com/news.xml',
@@ -34,26 +35,36 @@ export async function getNews() {
     });
     let entry = null;
     let imageUrl = null;
+    let textContent = null;
     for (let i=0; i<rssJson.responseData.feed.entries.length; i++) {
       entry = rssJson.responseData.feed.entries[i];
       imageUrl = null;
+      textContent = '';
       let matches = [];
       let match = rex.exec(entry.content);
-      while (match != null) {
-        matches.push(match[1]);
-        if (imageUrl == null) {
-          let imageMatch = imagex.exec(match[1]);
-          if (imageMatch != null) {
-            imageUrl = imageMatch[1];
-          }
-        }
-        match = rex.exec(entry.content);
+      if (match != null) {
+        textContent = striptags(match[1]);
       }
-      let textContent = striptags(matches[matches.length-1]);
+      match = imagex.exec(entry.content);
+      if (match != null) {
+        imageUrl = match[1];
+      }
+      // while (match != null) {
+      //   matches.push(match[1]);
+      //   if (imageUrl == null) {
+      //     let imageMatch = imagex.exec(match[1]);
+      //     if (imageMatch != null) {
+      //       imageUrl = imageMatch[1];
+      //     }
+      //   }
+      //   match = rex.exec(entry.content);
+      // }
+      // let textContent = striptags(matches[matches.length-1]);
       let summary = await summaryTool.summarize(entry.title, textContent);
       let pubTime = Date.parse(entry.publishedDate);
       // console.log(`${pubTime}|${entry.link}`, "hash:", getHashCode(`${pubTime}|${entry.link}`));
-      let formattedEntry = {title:entry.title, link:entry.link, pubTime, subtitle:matches[1], summary, image:imageUrl, tags:[category, matches[0]], value:0};
+      let formattedEntry = {title:entry.title, link:entry.link, pubTime, subtitle:matches[1], summary, image:imageUrl, tags:[category], value:0};
+      // console.log(formattedEntry);
       articles.push(formattedEntry);
     }
     console.log(`Feed:${category} - articles:${rssJson.responseData.feed.entries.length}`);
