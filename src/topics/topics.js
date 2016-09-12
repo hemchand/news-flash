@@ -16,6 +16,7 @@ const globalTopic: any = defTopic(
        "top stories",
        [/^top stories$/i, /^headlines?$/i, /^head lines?$/i, /^trending/i],
        async (state) => {
+         await libUser.save(state.session);
          const articles = await libNews.getTopStories();
          return [libNews.formatResults(articles)];
        }),
@@ -24,6 +25,7 @@ const globalTopic: any = defTopic(
         "Stories for you",
         [/^Stories for you$/i],
         async (state) => {
+          await libUser.save(state.session);
           const articles = await libNews.getYourStories();
           return [libNews.formatResults(articles)];
       }),
@@ -38,6 +40,7 @@ const globalTopic: any = defTopic(
          }
        },
        async (state, articleId) => {
+         await libUser.save(state.session);
          const article = await libNews.getArticleById(articleId);
          if (article) {
            return [
@@ -60,6 +63,7 @@ const globalTopic: any = defTopic(
        "Ask News minute",
        [/Ask News minute/i],
        async (state) => {
+         await libUser.save(state.session);
          return ['What’re you looking for? Use one or two  words to tell me what you want to know more about. For example, you could type “politics” or “space.”'];
      }),
       defHook(
@@ -67,6 +71,7 @@ const globalTopic: any = defTopic(
         "default search",
         async (state, message) => message,
         async (state, message) => {
+          await libUser.save(state.session);
           const articles = await libNews.searchNews(message.text);
           if (articles && articles.length > 0) {
             return [`Here’s something about ${message.text}`, libNews.formatResults(articles)];

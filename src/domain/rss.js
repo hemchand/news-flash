@@ -6,8 +6,9 @@ import {tidy} from "htmltidy";
 
 const summaryTool = promisify("node-summary");
 
-const rex = /\<div\>\s*\<div\>\s*\<div\>([\s\S]*?)\<\/div\>\s*\<\/div\>\s*\<\/div\>/igm;
-const imagex = /\<div\>\s*<img src="([^"]*)"[^\<]*?\<\/div\>/igm;
+const rex = /\<div\>\s*\<div\>\s*\<div\>([\s\S]*?)\<\/div\>\s*\<\/div\>\s*\<\/div\>/im;
+const imagex = /\<div\>\s*<img[^\<]*? src="([^"]*)"[^\<]*?\<\/div\>/im;
+const blurbex = /Blurb\s*:\s*\<\/div\>\s*\<div\>\s*\<div\>([^\<]*?)\<\/div\>/im;
 
 const rssFeeds = {
   "India and World":	'http://www.thenewsminute.com/news.xml',
@@ -36,10 +37,12 @@ export async function getNews() {
     let entry = null;
     let imageUrl = null;
     let textContent = null;
+    let subtitle = null;
     for (let i=0; i<rssJson.responseData.feed.entries.length; i++) {
       entry = rssJson.responseData.feed.entries[i];
       imageUrl = null;
       textContent = '';
+      subtitle = '';
       let matches = [];
       let match = rex.exec(entry.content);
       if (match != null) {
@@ -48,6 +51,10 @@ export async function getNews() {
       match = imagex.exec(entry.content);
       if (match != null) {
         imageUrl = match[1];
+      }
+      match = blurbex.exec(entry.content);
+      if (match != null) {
+        subtitle = match[1];
       }
       // while (match != null) {
       //   matches.push(match[1]);
@@ -63,7 +70,7 @@ export async function getNews() {
       let summary = await summaryTool.summarize(entry.title, textContent);
       let pubTime = new Date(entry.publishedDate);
       // console.log(`${pubTime}|${entry.link}`, "hash:", getHashCode(`${pubTime}|${entry.link}`));
-      let formattedEntry = {title:entry.title, link:entry.link, pubTime, subtitle:matches[1], summary, image:imageUrl, tags:[category], value:0};
+      let formattedEntry = {title:entry.title, link:entry.link, pubTime, subtitle, summary, content:textContent, image:imageUrl, tags:[category], value:0};
       // console.log(formattedEntry);
       articles.push(formattedEntry);
     }

@@ -15,7 +15,7 @@ export function getOptinHook(topic: any) : any {
    [/^optin$/i],
    async (state) => {
      await clearConversation(state);
-     saveUser();
+     await libUser.save(state.session);
      return [
      {
        "type":"options",
@@ -36,14 +36,14 @@ export function getStartOverHook(topic: any, mainTopic: any) : any {
     //  if (state.context.topic.name !== 'main') {
     //    await enterTopic(state.context.topic, state, main.topic);
     //  }
-    await libUser.save(state.session.user.id, state.session.type, state.session.pageId);
-  //    return [
-  //    'Hi there, let’s get started.',
-  //    {
-  //      "type":"options",
-  //      "text": "Pick an option below to get going",//Select from one of the below options:",
-  //      "values": defautMenu
-  //    }
-  //  ]
+     await libUser.save(state.session);
+     return [
+     'Hi there, let’s get started.',
+     {
+       "type":"options",
+       "text": "Pick an option below to get going",//Select from one of the below options:",
+       "values": defautMenu
+     }
+   ]
  });
 }

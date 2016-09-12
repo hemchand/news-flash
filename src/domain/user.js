@@ -8,14 +8,13 @@ import * as libDBO from "./dbo";
 // }
 const collName = 'users';
 
-export async function save(userId, source, pageId) {
+export async function save(session) {
+  let userId = session.user.id;
   let dbUser = await libDBO.findOne(collName, {userId});
   console.log("dbUser:", dbUser);
   if (dbUser) {
-    console.log("in update");
-    await libDBO.updateOne(collName, {userId}, {source, pageId, last_active: new Date()});
+    await libDBO.updateOne(collName, {userId}, {source:session.type, pageId:session.pageId, last_active: new Date()});
   } else {
-    console.log("in create");
-    await libDBO.createNew(collName, {userId, source, pageId, last_active: new Date()});
+    await libDBO.createNew(collName, {userId, source:session.type, pageId:session.pageId, last_active: new Date()});
   }
 }
