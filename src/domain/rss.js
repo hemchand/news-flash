@@ -14,15 +14,15 @@ const tagsrex = /<div[^\<]*?field-name-field-bread-crumb-news[^\<]*?\>([\s\S]*?)
 
 const rssFeeds = {
   "India and World":	'http://www.thenewsminute.com/news.xml',
-  // "Karnataka":	'http://www.thenewsminute.com/karnataka.xml',
-  // "Kerala":	'http://www.thenewsminute.com/kerala.xml',
-  // "Tamil Nadu":	'http://www.thenewsminute.com/tamil.xml',
-  // "Andhra Pradesh":	'http://www.thenewsminute.com/andhra.xml',
-  // "Telangana":	'http://www.thenewsminute.com/telangana.xml',
-  // "Culture":	'http://www.thenewsminute.com/culture.xml',
-  // "Media":	'http://www.thenewsminute.com/media.xml',
-  // "Blog":	'http://www.thenewsminute.com/blog.xml',
-  // "Opinion":	'http://www.thenewsminute.com/opinion.xml'
+  "Karnataka":	'http://www.thenewsminute.com/karnataka.xml',
+  "Kerala":	'http://www.thenewsminute.com/kerala.xml',
+  "Tamil Nadu":	'http://www.thenewsminute.com/tamil.xml',
+  "Andhra Pradesh":	'http://www.thenewsminute.com/andhra.xml',
+  "Telangana":	'http://www.thenewsminute.com/telangana.xml',
+  "Culture":	'http://www.thenewsminute.com/culture.xml',
+  "Media":	'http://www.thenewsminute.com/media.xml',
+  "Blog":	'http://www.thenewsminute.com/blog.xml',
+  "Opinion":	'http://www.thenewsminute.com/opinion.xml'
 };
 
 function getHashCode(s){
