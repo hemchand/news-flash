@@ -102,5 +102,3 @@ export async function getNews() {
   console.log(articles);
   return articles;
 }
-
-getNews();
