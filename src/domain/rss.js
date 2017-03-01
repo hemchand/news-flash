@@ -6,75 +6,92 @@ import {tidy} from "htmltidy";
 
 const summaryTool = promisify("node-summary");
 
-const rex = /\<div\>\s*\<div\>\s*\<div\>([\s\S]*?)\<\/div\>\s*\<\/div\>\s*\<\/div\>/im;
-const imagex = /\<div\>\s*<img[^\<]*? src="([^"]*)"[^\<]*?\<\/div\>/im;
-const blurbex = /Blurb\s*:\s*\<\/div\>\s*\<div\>\s*\<div\>([^\<]*?)\<\/div\>/im;
+const rex = /\<div[^\<]*?field-type-text-with-summary[^\<]*?\>([\s\S]*?)\<\/div\>/im;
+const imagex = /\<span class="file"\>\<img class="file-icon"[^\<]*?\>\<a[^\<]*?href="([^"]*)"[^\<]*?\>/im;
+const blurbex = /\<div[^\<]*?field-name-field-blurb-news[^\<]*?\>\<div[^\<]*?\>\<div[^\<]*?\>([^\<]*?)\<\/div\>\<\/div\>/im;
+const tagsrex = /<div[^\<]*?field-name-field-bread-crumb-news[^\<]*?\>([\s\S]*?)\<\/div>/im;
+
 
 const rssFeeds = {
   "India and World":	'http://www.thenewsminute.com/news.xml',
-  "Karnataka":	'http://www.thenewsminute.com/karnataka.xml',
-  "Kerala":	'http://www.thenewsminute.com/kerala.xml',
-  "Tamil Nadu":	'http://www.thenewsminute.com/tamil.xml',
-  "Andhra Pradesh":	'http://www.thenewsminute.com/andhra.xml',
-  "Telangana":	'http://www.thenewsminute.com/telangana.xml',
-  "Culture":	'http://www.thenewsminute.com/culture.xml',
-  "Media":	'http://www.thenewsminute.com/media.xml',
-  "Blog":	'http://www.thenewsminute.com/blog.xml',
-  "Opinion":	'http://www.thenewsminute.com/opinion.xml'
+  // "Karnataka":	'http://www.thenewsminute.com/karnataka.xml',
+  // "Kerala":	'http://www.thenewsminute.com/kerala.xml',
+  // "Tamil Nadu":	'http://www.thenewsminute.com/tamil.xml',
+  // "Andhra Pradesh":	'http://www.thenewsminute.com/andhra.xml',
+  // "Telangana":	'http://www.thenewsminute.com/telangana.xml',
+  // "Culture":	'http://www.thenewsminute.com/culture.xml',
+  // "Media":	'http://www.thenewsminute.com/media.xml',
+  // "Blog":	'http://www.thenewsminute.com/blog.xml',
+  // "Opinion":	'http://www.thenewsminute.com/opinion.xml'
 };
 
 function getHashCode(s){
   return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
 }
-
+//api_key=io1euaimql6h0btxa96esvcfahbdmeyhjuvhckkg&
 export async function getNews() {
   let articles = [];
   for (let category in rssFeeds) {
+    let url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssFeeds[category])}`;
+    console.log(url);
     const rssJson = await request({
-      uri: `https://ajax.googleapis.com/ajax/services/feed/load?v=2.0&q=${rssFeeds[category]}&num=`,
-      json: true
+        url: url,
+        json: true
     });
-    let entry = null;
-    let imageUrl = null;
-    let textContent = null;
-    let subtitle = null;
-    for (let i=0; i<rssJson.responseData.feed.entries.length; i++) {
-      entry = rssJson.responseData.feed.entries[i];
-      imageUrl = null;
-      textContent = '';
-      subtitle = '';
-      let matches = [];
-      let match = rex.exec(entry.content);
-      if (match != null) {
-        textContent = striptags(match[1]);
+    if (rssJson.status == "ok") {
+      let entry = null;
+      let imageUrl = null;
+      let textContent = null;
+      let subtitle = null;
+      let tags = null;
+      if (rssJson.items.length == 0) {
+        console.log("0 count:", rssJson);
       }
-      match = imagex.exec(entry.content);
-      if (match != null) {
-        imageUrl = match[1];
+      for (let i=0; i<rssJson.items.length; i++) {
+        entry = rssJson.items[i];
+        imageUrl = null;
+        textContent = '';
+        subtitle = '';
+        let matches = [];
+        let match = rex.exec(entry.content);
+        if (match != null) {
+          textContent = striptags(match[1]);
+        }
+        match = imagex.exec(entry.content);
+        if (match != null) {
+          imageUrl = match[1];
+        }
+        match = blurbex.exec(entry.content);
+        if (match != null) {
+          subtitle = match[1];
+        }
+        tags = [category];
+        match = tagsrex.exec(entry.content);
+        if (match != null) {
+          tags.push(striptags(match[1]));
+        }
+        // while (match != null) {
+        //   matches.push(match[1]);
+        //   if (imageUrl == null) {
+        //     let imageMatch = imagex.exec(match[1]);
+        //     if (imageMatch != null) {
+        //       imageUrl = imageMatch[1];
+        //     }
+        //   }
+        //   match = rex.exec(entry.content);
+        // }
+        // let textContent = striptags(matches[matches.length-1]);
+        let summary = await summaryTool.summarize(entry.title, textContent);
+        let pubTime = new Date(entry.pubDate);
+        // console.log(`${pubTime}|${entry.link}`, "hash:", getHashCode(`${pubTime}|${entry.link}`));
+        let formattedEntry = {title:entry.title, link:entry.link, pubTime, author:entry.author, subtitle, summary, content:textContent, image:imageUrl, tags, value:0};
+        // console.log(formattedEntry);
+        articles.push(formattedEntry);
       }
-      match = blurbex.exec(entry.content);
-      if (match != null) {
-        subtitle = match[1];
-      }
-      // while (match != null) {
-      //   matches.push(match[1]);
-      //   if (imageUrl == null) {
-      //     let imageMatch = imagex.exec(match[1]);
-      //     if (imageMatch != null) {
-      //       imageUrl = imageMatch[1];
-      //     }
-      //   }
-      //   match = rex.exec(entry.content);
-      // }
-      // let textContent = striptags(matches[matches.length-1]);
-      let summary = await summaryTool.summarize(entry.title, textContent);
-      let pubTime = new Date(entry.publishedDate);
-      // console.log(`${pubTime}|${entry.link}`, "hash:", getHashCode(`${pubTime}|${entry.link}`));
-      let formattedEntry = {title:entry.title, link:entry.link, pubTime, subtitle, summary, content:textContent, image:imageUrl, tags:[category], value:0};
-      // console.log(formattedEntry);
-      articles.push(formattedEntry);
+      console.log(`Feed:${category} - articles:${rssJson.items.length}`);
+    } else {
+      // console.log("errors:", rssJson);
     }
-    console.log(`Feed:${category} - articles:${rssJson.responseData.feed.entries.length}`);
   }
   // let yesterday = new Date();
   // yesterday.setDate(yesterday.getDate() - 1);
@@ -82,5 +99,8 @@ export async function getNews() {
   // console.log("before filter:", articles.length);
   // articles.filter(x => x.pubTime > yesterday).sort((x,y) => y.pubTime - x.pubTime);
   // console.log("after filter:", articles.length);
+  console.log(articles);
   return articles;
 }
+
+getNews();
