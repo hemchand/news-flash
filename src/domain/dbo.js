@@ -61,3 +61,7 @@ export async function updateOne(collName, filter, entity) {
 export async function deleteOne(collName, entityId) {
   return await (await getCollection(collName)).deleteOne({ _id: getObjectId(entityId) });
 }
+
+export async function deleteMany(collName, filter) {
+  return await (await getCollection(collName)).deleteMany(filter);
+}

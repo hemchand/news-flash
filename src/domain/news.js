@@ -46,8 +46,14 @@ export async function searchNews(text) {
 }
 
 export async function refresh(pageAccessTokens) {
+  var twoWeeksBack = new Date();
+  twoWeeksBack.setDate(twoWeeksBack.getDate()-14);
+  await libDBO.deleteMany(collName, {'pubTime': {$lt: twoWeeksBack}});
+
   let newArticles = 0;
   const articles = await rss.getNews();
+  if (articles.length == 0) { return {articles:0}; }
+
   let links = articles.map(x => x.link);
   let results = await libDBO.findMany(collName, {link: {$in: links}}, ['link']);
   let oldLinks = results.map(x => x.link);

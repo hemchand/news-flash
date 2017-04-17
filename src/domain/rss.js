@@ -2,7 +2,6 @@
 import request from "request-promise";
 import striptags from "striptags";
 import promisify from "promisify-node";
-import {tidy} from "htmltidy";
 
 const summaryTool = promisify("node-summary");
 
@@ -10,6 +9,10 @@ const rex = /\<div[^\<]*?field-type-text-with-summary[^\<]*?\>([\s\S]*?)\<\/div\
 const imagex = /\<span class="file"\>\<img class="file-icon"[^\<]*?\>\<a[^\<]*?href="([^"]*)"[^\<]*?\>/im;
 const blurbex = /\<div[^\<]*?field-name-field-blurb-news[^\<]*?\>\<div[^\<]*?\>\<div[^\<]*?\>([^\<]*?)\<\/div\>\<\/div\>/im;
 const tagsrex = /<div[^\<]*?field-name-field-bread-crumb-news[^\<]*?\>([\s\S]*?)\<\/div>/im;
+
+const metaDescRex = /\<meta property="og\:description" content="([^"]*)" \/\>/im;
+const metaImageRex = /\<meta property="og\:image" content="([^"]*)" \/\>/im;
+const htmlBlurbex = /\<div class="views-field views-field-field-blurb-news"\>\s+\<span class="field-content"\>([^\<]*?)\<\/span\>/im;
 
 
 const rssFeeds = {
@@ -30,16 +33,18 @@ const rssFeeds = {
 function getHashCode(s){
   return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
 }
+
+function getArticleInfo(rss) {
+
+}
+
 //api_key=io1euaimql6h0btxa96esvcfahbdmeyhjuvhckkg&
 export async function getNews() {
   let articles = [];
   for (let category in rssFeeds) {
     let url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssFeeds[category])}`;
     console.log(url);
-    const rssJson = await request({
-        url: url,
-        json: true
-    });
+    const rssJson = await request({url: url, json: true});
     if (rssJson.status == "ok") {
       let entry = null;
       let imageUrl = null;
@@ -50,39 +55,47 @@ export async function getNews() {
         console.log("0 count:", rssJson);
       }
       for (let i=0; i<rssJson.items.length; i++) {
+        tags = [category];
         entry = rssJson.items[i];
         imageUrl = null;
         textContent = '';
         subtitle = '';
-        let matches = [];
-        let match = rex.exec(entry.content);
-        if (match != null) {
-          textContent = striptags(match[1]);
+        if (entry.content.length > 0) {
+          let matches = [];
+          let match = rex.exec(entry.content);
+          if (match != null) {
+            textContent = striptags(match[1]);
+          }
+          match = imagex.exec(entry.content);
+          if (match != null) {
+            imageUrl = match[1];
+          }
+          match = blurbex.exec(entry.content);
+          if (match != null) {
+            subtitle = match[1];
+          }
+          match = tagsrex.exec(entry.content);
+          if (match != null) {
+            tags.push(striptags(match[1]));
+          }
+        } else {
+          console.log(`No content in RSS. loading page: ${entry.link}`);
+          const pageHtml = await request({url:entry.link, gzip:true});
+          let match2 = metaDescRex.exec(pageHtml);
+          if (match2 != null) {
+            textContent = match2[1];
+          }
+
+          match2 = metaImageRex.exec(pageHtml);
+          if (match2 != null) {
+            imageUrl = match2[1];
+          }
+
+          match2 = htmlBlurbex.exec(pageHtml);
+          if (match2 != null) {
+            subtitle = match2[1].trim();
+          }
         }
-        match = imagex.exec(entry.content);
-        if (match != null) {
-          imageUrl = match[1];
-        }
-        match = blurbex.exec(entry.content);
-        if (match != null) {
-          subtitle = match[1];
-        }
-        tags = [category];
-        match = tagsrex.exec(entry.content);
-        if (match != null) {
-          tags.push(striptags(match[1]));
-        }
-        // while (match != null) {
-        //   matches.push(match[1]);
-        //   if (imageUrl == null) {
-        //     let imageMatch = imagex.exec(match[1]);
-        //     if (imageMatch != null) {
-        //       imageUrl = imageMatch[1];
-        //     }
-        //   }
-        //   match = rex.exec(entry.content);
-        // }
-        // let textContent = striptags(matches[matches.length-1]);
         let summary = await summaryTool.summarize(entry.title, textContent);
         let pubTime = new Date(entry.pubDate);
         // console.log(`${pubTime}|${entry.link}`, "hash:", getHashCode(`${pubTime}|${entry.link}`));
@@ -101,6 +114,6 @@ export async function getNews() {
   // console.log("before filter:", articles.length);
   // articles.filter(x => x.pubTime > yesterday).sort((x,y) => y.pubTime - x.pubTime);
   // console.log("after filter:", articles.length);
-  console.log(articles.length);
+  console.log(`Total: ${articles.length}`);
   return articles;
 }

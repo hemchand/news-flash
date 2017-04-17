@@ -44,7 +44,7 @@ const globalTopic: any = defTopic(
          const article = await libNews.getArticleById(articleId);
          if (article) {
            return [
-             article.summary,
+             article.summary.length > 640 ? article.summary.substring(0, 637) + '...' : article.summary,
              {
              "type":"options",
              "text": 'What next?”',
