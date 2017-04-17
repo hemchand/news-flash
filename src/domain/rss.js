@@ -14,15 +14,17 @@ const tagsrex = /<div[^\<]*?field-name-field-bread-crumb-news[^\<]*?\>([\s\S]*?)
 
 const rssFeeds = {
   "India and World":	'http://www.thenewsminute.com/news.xml',
+  "Andhra Pradesh":	'http://www.thenewsminute.com/andhra.xml',
   "Karnataka":	'http://www.thenewsminute.com/karnataka.xml',
   "Kerala":	'http://www.thenewsminute.com/kerala.xml',
   "Tamil Nadu":	'http://www.thenewsminute.com/tamil.xml',
-  "Andhra Pradesh":	'http://www.thenewsminute.com/andhra.xml',
   "Telangana":	'http://www.thenewsminute.com/telangana.xml',
+  "Features": 'http://www.thenewsminute.com/features.xml',
+  "Flix": 'http://www.thenewsminute.com/flix.xml',
+  "Voices": 'http://www.thenewsminute.com/voices.xml',
   "Culture":	'http://www.thenewsminute.com/culture.xml',
-  "Media":	'http://www.thenewsminute.com/media.xml',
-  "Blog":	'http://www.thenewsminute.com/blog.xml',
-  "Opinion":	'http://www.thenewsminute.com/opinion.xml'
+  "Social":	'http://www.thenewsminute.com/social.xml',
+  "Atom":	'http://www.thenewsminute.com/atom.xml'
 };
 
 function getHashCode(s){
@@ -99,6 +101,6 @@ export async function getNews() {
   // console.log("before filter:", articles.length);
   // articles.filter(x => x.pubTime > yesterday).sort((x,y) => y.pubTime - x.pubTime);
   // console.log("after filter:", articles.length);
-  console.log(articles);
+  console.log(articles.length);
   return articles;
 }
